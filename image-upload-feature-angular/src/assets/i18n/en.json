@@ -1,0 +1,46 @@
+{
+    "LANDING": {
+      "LANDING_MESSAGE": "Hello, this is an Angular v20 template including the base elements: Authentication, Interceptors, Guard, Translation"
+    },
+    "AUTH": {
+        "LOGIN": {
+          "WELCOME_BACK": "Welcome back",
+          "SIGN_IN_TO_PLATFORM": "Sign in to your platform",
+          "EMAIL_ADDRESS": "Email address",
+          "EMAIL_PLACEHOLDER": "Enter your email",
+          "PASSWORD": "Password",
+          "PASSWORD_PLACEHOLDER": "Enter your password",
+          "SIGN_IN": "Sign In",
+          "SIGNING_IN": "Signing in...",
+          "ERRORS": {
+            "REQUIRED": "{{field}} is required",
+            "EMAIL": "Please enter a valid email address",
+            "MIN_LENGTH": "{{field}} must be at least {{min}} characters",
+            "MAX_LENGTH": "{{field}} must not exceed {{max}} characters",
+            "INVALID_CREDENTIALS": "Invalid email or password. Please try again.",
+            "TOO_MANY_ATTEMPTS": "Too many login attempts. Please try again later.",
+            "SERVER_ERROR": "Unable to connect to server. Please check your internet connection."
+          }
+        },
+          "VALIDATION": {
+          "REQUIRED": "{{field}} is required",
+          "EMAIL": "Please enter a valid email address",
+          "MIN_LENGTH": "{{field}} must be at least {{min}} characters",
+          "MAX_LENGTH": "{{field}} must not exceed {{max}} characters",
+          "PATTERN": "{{field}} contains invalid characters",
+          "PASSWORD_MISMATCH": "Passwords do not match",
+          "PASSWORD_STRENGTH": "Password must contain {{rules}}"
+        },
+        "PASSWORD_RULES": {
+          "NUMBER": "one number",
+          "UPPER": "one uppercase letter",
+          "LOWER": "one lowercase letter",
+          "SPECIAL": "one special character",
+          "MIN_LENGTH": "at least 8 characters"
+        }
+      },
+    "SHARED": {
+      "ENGLISH": "English",
+      "MACEDONIAN": "Macedonian"
+    }
+}

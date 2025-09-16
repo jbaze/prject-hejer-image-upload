@@ -1,0 +1,189 @@
+<div class="loading-container flex items-center justify-center" *ngIf="isLoading">
+  <svg class="animate-spin h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+  </svg>
+  <span class="ml-2 text-gray-500">Loading images...</span>
+</div>
+
+<div class="w-full mx-auto p-6 mt-7 bg-white rounded-lg shadow-lg" *ngIf="!isLoading">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-xl font-bold text-gray-800">
+      {{ userName | titlecase }}'s Images
+    </h3>
+    <div class="text-sm text-gray-500">
+      {{ images.length + pendingImages.length }} / {{ maxImages }} images
+      <span *ngIf="pendingImages.length > 0" class="ml-2 text-blue-600">
+        ({{ pendingImages.length }} uploading)
+      </span>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded flex items-center gap-2">
+    <!-- Custom Alert Icon -->
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+    </svg>
+    {{ error }}
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded flex items-center gap-2">
+    <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+      <div class="w-2 h-1 bg-white rounded transform rotate-45"></div>
+    </div>
+    {{ successMessage }}
+  </div>
+
+  <!-- Upload Area -->
+  <div
+    *ngIf="images.length + pendingImages.length < maxImages"
+    class="mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer"
+    [class.border-blue-400]="dragOver"
+    [class.bg-blue-50]="dragOver"
+    [class.border-gray-300]="!dragOver"
+    [class.hover:border-gray-400]="!dragOver"
+    [class.hover:bg-gray-50]="!dragOver"
+    (dragover)="handleDragOver($event)"
+    (dragleave)="handleDragLeave($event)"
+    (drop)="handleDrop($event)"
+    (click)="openFileDialog()"
+  >
+    <input type="file" #fileInput multiple accept="image/*" class="hidden" (change)="handleFileSelect($event.target.files)" />
+    <div class="flex flex-col items-center gap-4">
+      <ng-container *ngIf="isUploading; else uploadIcon">
+        <div class="flex items-center gap-2">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <span class="text-blue-600">Uploading...</span>
+        </div>
+      </ng-container>
+      <ng-template #uploadIcon>
+        <!-- Custom Upload Icon -->
+        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 16v4h16v-4M12 4v12M8 8l4-4 4 4" />
+        </svg>
+        <div>
+          <p class="text-lg font-medium text-gray-700">Drop images here or click to upload</p>
+          <p class="text-sm text-gray-500 mt-1">You can upload {{ maxImages - (images.length + pendingImages.length) }} more images</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Image Grid -->
+  <div *ngIf="images.length + pendingImages.length > 0; else emptyState" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+    <ng-container *ngFor="let image of images.concat(pendingImages); let i = index">
+      <div class="relative group">
+        <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+          <img [src]="image?.base64Data" alt="{{ image?.fileName }}" class="w-full h-full object-cover cursor-pointer hover:opacity-75 transition-opacity"
+            (click)="!deletingImageIds.has(image.id || image.tempId) && selectedImageIndex = i" />
+          <!-- Pending / Deleting overlays -->
+          <div *ngIf="image.isNew && !image.id" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+          </div>
+          <div *ngIf="image.id && deletingImageIds.has(image.id)" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+          </div>
+        </div>
+
+        <!-- Image Actions -->
+        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+          <!-- View / Eye Icon -->
+          <button class="p-1 bg-white rounded-full shadow-md hover:bg-gray-100"
+                (click)="openGallery(i)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+          <!-- Delete / Trash Icon -->
+          <button class="p-1 bg-white rounded-full shadow-md hover:bg-red-100" 
+                  (click)="deleteImage(image)">
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v0a1 1 0 001 1h4a1 1 0 001-1v0a1 1 0 00-1-1m-4 0h4"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Image Info -->
+        <div class="mt-2">
+          <p class="text-xs text-gray-500 truncate mt-1" title="{{ image?.fileName }}">
+            {{ image?.fileName }}
+            <span *ngIf="image.isNew && !image.id" class="text-blue-600 ml-1">(uploading)</span>
+            <span *ngIf="image.id && deletingImageIds.has(image.id)" class="text-red-600 ml-1">(deleting)</span>
+          </p>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Add More Button -->
+    <div *ngIf="images.length + pendingImages.length < maxImages"
+         class="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+         (click)="openFileDialog()">
+      <div class="text-center">
+        <!-- Plus Icon -->
+        <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <p class="text-sm text-gray-500">Add More</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #emptyState>
+    <div class="text-center py-12 text-gray-400">
+      <p>No images uploaded yet.</p>
+    </div>
+  </ng-template>
+</div>
+
+<div
+  *ngIf="selectedImageIndex !== null"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+>
+  <!-- Close Button -->
+  <button
+    (click)="closeGallery()"
+    class="absolute top-4 right-4 text-white text-2xl font-bold hover:text-gray-300"
+  >
+    &times;
+  </button>
+
+  <!-- Previous Button -->
+  <button
+    (click)="prevImage()"
+    class="absolute left-4 text-white text-3xl font-bold hover:text-gray-300"
+    [disabled]="selectedImageIndex === 0"
+  >
+    &#10094;
+  </button>
+
+  <!-- Next Button -->
+  <button
+    (click)="nextImage()"
+    class="absolute right-4 text-white text-3xl font-bold hover:text-gray-300"
+    [disabled]="selectedImageIndex === allImages.length - 1"
+  >
+    &#10095;
+  </button>
+
+  <!-- Image -->
+  <img
+    [src]="selectedImage?.base64Data"
+    [alt]="selectedImage?.fileName"
+    class="max-h-[90vh] max-w-[90vw] object-contain"
+  />
+
+  <!-- Caption -->
+  <p class="absolute bottom-4 text-white text-center text-sm">
+    {{ selectedImage?.fileName }}
+  </p>
+</div>
